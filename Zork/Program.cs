@@ -35,25 +35,10 @@ namespace Zork
 
                     case Commands.NORTH:
                     case Commands.SOUTH:
-                        outputString = "The way is shut!";
-                        break;
-
-                    case Commands.EAST:
-                        if (LocationColumn < Rooms.Length - 1)
-                        {
-                            LocationColumn++;
-                            outputString = $"You moved {command}.";
-                        }
-                        else
-                        {
-                            outputString = "The way is shut!";
-                        }
-                        break;
-
+                    case Commands.EAST:                       
                     case Commands.WEST:
-                        if (LocationColumn > 0)
+                        if (Move(command))
                         {
-                            LocationColumn--;
                             outputString = $"You moved {command}.";
                         }
                         else
@@ -63,7 +48,7 @@ namespace Zork
                         break;
 
                     default:
-                        outputString = "Unrecognized command.";
+                        outputString = "Unknown command.";
                         break;
                 }
 
@@ -92,7 +77,8 @@ namespace Zork
                 case Commands.WEST:
                     if (LocationColumn > 0)
                     {
-
+                        LocationColumn--;
+                        didMove = true;
                     }
                     break;
             }
