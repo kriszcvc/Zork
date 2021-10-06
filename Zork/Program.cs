@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Linq;
+using System.IO;
 using System.Collections.Generic;
 
 namespace Zork
@@ -16,7 +16,8 @@ namespace Zork
 
         static void Main(string[] args)
         {
-            InitializeRoomDescriptions();
+            const string roomDescriptionsFilename = "Rooms.txt";
+            InitializeRoomDescriptions(roomDescriptionsFilename);
 
             Console.WriteLine("Welcome to Zork");
 
@@ -69,32 +70,16 @@ namespace Zork
             bool isValidMove = true;
             switch (command)
             {
-                case Commands.NORTH:
-                    if (LocationRow < Rooms.GetLength(1) - 1)
-                    {
-                        LocationRow++;
-                    }
+                case Commands.NORTH when LocationRow < Rooms.GetLength(0) - 1: LocationRow++;
                     break;
 
-                case Commands.SOUTH:
-                    if (LocationRow > 0)
-                    {
-                        LocationRow--;
-                    }
+                case Commands.SOUTH when LocationRow > 0: LocationRow--;
                     break;
 
-                case Commands.EAST:
-                    if (LocationColumn < Rooms.GetLength(1) - 1)
-                    {
-                        LocationColumn++;
-                    }
+                case Commands.EAST when LocationColumn < Rooms.GetLength(1) - 1: LocationColumn++;
                     break;
 
-                case Commands.WEST:
-                    if (LocationColumn > 0)
-                    {
-                        LocationColumn--;
-                    }
+                case Commands.WEST when LocationColumn > 0: LocationColumn--;
                     break;
 
                 default:
@@ -123,12 +108,25 @@ namespace Zork
             return Directions.Contains(command);
         }
 
-        private static void InitializeRoomDescriptions()
+        private static void InitializeRoomDescriptions(string roomDescriptionsFilename)
         {
             var roomMap = new Dictionary<string, Room>();
             foreach (Room room in Rooms)
             {
                 roomMap.Add(room.Name, room);
+            }
+
+            string[] lines = File.ReadAllLines(roomDescriptionsFilename);
+            foreach (string line in lines)
+            {
+                const string delimiter = "##";
+                const int expectedFieldCount = 2;
+
+                string[] fields = line.Split(delimiter);
+                Assert.IsTrue(fields.Length == expectedFieldCount, "Invalid record");
+
+                (string name, string description) = (fields[(int)Fields.Name], fields[(int)Fields.Description]);
+                roomMap[name].Description = description;
             }
 
             roomMap["Rocky Trail"].Description = "You are on a rock-strewn trail.";
@@ -156,6 +154,12 @@ namespace Zork
             Commands.EAST,
             Commands.WEST
         };
+
+        private enum Fields
+        {
+            Name = 0,
+            Description = 1
+        }
 
         private static int LocationRow = 1;
         private static int LocationColumn = 1;
