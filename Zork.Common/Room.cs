@@ -1,56 +1,77 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using Newtonsoft.Json;
 
 namespace Zork
 {
-	public class Room : IEquatable<Room>
-	{
-		[JsonProperty(Order = 1)]
-		public string Name { get; set; }
+    public class Room : IEquatable<Room>, INotifyPropertyChanged
+    {
+        public event PropertyChangedEventHandler PropertyChanged;
 
-		[JsonProperty(Order = 2)]
-		public string Description { get; set; }
+        [JsonProperty(Order = 1)]
+        public string Name { get; set; }
 
-		[JsonProperty(PropertyName = "Neighbors", Order = 3)]
-		private Dictionary<Directions, string> NeighborNames { get; set; }
+        [JsonProperty(Order = 2)]
+        public string Description { get; set; }
 
-		[JsonIgnore]
-		public Dictionary<Directions, Room> Neighbors { get; private set; }
+        [JsonProperty(PropertyName = "Neighbors", Order = 3)]
+        private Dictionary<Directions, string> NeighborNames { get; set; } = new Dictionary<Directions, string>();
 
-		public static bool operator ==(Room lhs, Room rhs)
-		{
-			if (ReferenceEquals(lhs, rhs))
-			{
-				return true;
-			}
+        [JsonIgnore]
+        public IReadOnlyDictionary<Directions, Room> Neighbors => _neighbors;
 
-			if (lhs is null || rhs is null)
-			{
-				return false;
-			}
+        public Room(string name = null)
+        {
+            Name = name;
+        }
 
-			return lhs.Name == rhs.Name;
-		}
+        public static bool operator ==(Room lhs, Room rhs)
+        {
+            if (ReferenceEquals(lhs, rhs))
+            {
+                return true;
+            }
 
-		public static bool operator !=(Room lhs, Room rhs) => !(lhs == rhs);
+            if (lhs is null || rhs is null)
+            {
+                return false;
+            }
 
-		public override bool Equals(object obj) => obj is Room room ? this == room : false;
+            return string.Compare(lhs.Name, rhs.Name, ignoreCase: true) == 0;
+        }
 
-		public bool Equals(Room other) => this == other;
+        public static bool operator !=(Room lhs, Room rhs) => !(lhs == rhs);
 
-		public override string ToString() => Name;
+        public override bool Equals(object obj) => obj is Room room && this == room;
 
-		public override int GetHashCode() => Name.GetHashCode();
+        public bool Equals(Room other) => this == other;
 
-		public void UpdateNeighbors(World world)
-		{
-			Neighbors = new Dictionary<Directions, Room>();
-			foreach (var pair in NeighborNames)
-			{
-				(Directions direction, string name) = (pair.Key, pair.Value);
-				Neighbors.Add(direction, world.RoomsByName[name]);
-			}
-		}
-	}
+        public override string ToString() => Name;
+
+        public override int GetHashCode() => Name.GetHashCode();
+
+        public void UpdateNeighbors(World world)
+        {
+            _neighbors.Clear();
+            foreach (var entry in NeighborNames)
+            {
+                _neighbors.Add(entry.Key, world.RoomsByName[entry.Value]);
+            }
+        }
+
+        public void RemoveNeighbor(Directions direction)
+        {
+            _neighbors.Remove(direction);
+            NeighborNames.Remove(direction);
+        }
+
+        public void AssignNeighbor(Directions direction, Room neighbor)
+        {
+            _neighbors[direction] = neighbor;
+            NeighborNames[direction] = neighbor.Name;
+        }
+
+        private Dictionary<Directions, Room> _neighbors = new Dictionary<Directions, Room>();
+    }
 }
