@@ -34,8 +34,6 @@ public class GameManager : MonoBehaviour
         _game.Start(InputService, OutputService);
 
         LocationText.text = _game.Player.Location.ToString();
-
-        _game.Commands["LOOK"].Action(_game);
     }
 
     [SerializeField]
